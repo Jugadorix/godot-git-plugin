@@ -10,11 +10,17 @@ jobs:
   build-windows-x64:
     runs-on: windows-2022
     steps:
-      - name: Checkout v3.2.1
+      - name: Checkout source
         uses: actions/checkout@v4
         with:
-          ref: v3.2.1
           submodules: recursive
+          fetch-depth: 0
+
+      - name: Checkout v3.2.1 source
+        shell: powershell
+        run: |
+          git fetch origin refs/tags/v3.2.1:refs/tags/v3.2.1
+          git checkout v3.2.1
 
       - name: Apply SSL fix
         shell: powershell
