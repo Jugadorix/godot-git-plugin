@@ -21,6 +21,8 @@ jobs:
         run: |
           git fetch origin refs/tags/v3.2.1:refs/tags/v3.2.1
           git checkout v3.2.1
+          git submodule sync --recursive
+          git submodule update --init --recursive --force
 
       - name: Apply SSL fix
         shell: powershell
