@@ -1,0 +1,43 @@
+name: Build Godot Git Plugin SSL Fix
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout v3.2.1
+        uses: actions/checkout@v4
+        with:
+          ref: v3.2.1
+          submodules: recursive
+
+      - name: Apply SSL fix
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/godotengine/godot-git-plugin/ff127364f392743b30e39527687982f5e09f323f/godot-git-plugin/src/git_plugin.cpp" -OutFile "godot-git-plugin/src/git_plugin.cpp"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/godotengine/godot-git-plugin/ff127364f392743b30e39527687982f5e09f323f/godot-git-plugin/src/git_plugin.h" -OutFile "godot-git-plugin/src/git_plugin.h"
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup NASM
+        uses: ilammy/setup-nasm@v1
+
+      - name: Build Windows x64 editor plugin
+        shell: powershell
+        run: |
+          pip3 install scons
+          scons platform=windows arch=x86_64 target=editor generate_bindings=yes
+          if (-not (Test-Path ".\addons\godot-git-plugin\windows\libgit_plugin.windows.editor.x86_64.dll")) { exit 1 }
+
+      - name: Upload DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-git-plugin-windows-x86_64-ssl-fix
+          path: addons/godot-git-plugin/windows/libgit_plugin.windows.editor.x86_64.dll
+          if-no-files-found: error
